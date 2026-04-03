@@ -2,12 +2,24 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Milburn Demolition — Operating System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;}
 :root{--g:#A6C820;--gd:#8aaa00;--bk:#1a1a1a;--ch:#404040;--gray:#6b7280;--lt:#f4f4f4;--bd:#e0e0e0;--red:#e53e3e;--org:#dd6b20;--bl:#3182ce;}
 body{background:var(--lt);color:var(--ch);}
-#app{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bk);}
+.login-box{background:#fff;border-radius:12px;padding:36px;width:380px;max-width:95vw;}
+.login-logo{font-size:22px;font-weight:800;color:var(--g);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.login-logo span{color:var(--bk);}
+.login-tag{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:28px;}
+.login-err{background:#fff5f5;border:1px solid #fed7d7;color:var(--red);padding:8px 12px;border-radius:5px;font-size:12px;margin-bottom:14px;display:none;}
+
+/* APP */
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden;display:none;}
 #nav{background:var(--bk);display:flex;align-items:center;padding:0 18px;height:52px;flex-shrink:0;gap:14px;}
 .logo{font-size:18px;font-weight:800;color:var(--g);letter-spacing:1px;text-transform:uppercase;}
 .logo span{color:#fff;}
@@ -15,6 +27,8 @@ body{background:var(--lt);color:var(--ch);}
 .nr{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .nr select{background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:4px;padding:5px 10px;font-size:12px;}
 .mbtn{background:var(--g);color:var(--bk);border:none;border-radius:4px;padding:6px 14px;font-weight:800;font-size:11px;cursor:pointer;text-transform:uppercase;}
+.lbtn{background:#333;color:#888;border:none;border-radius:4px;padding:6px 12px;font-weight:600;font-size:11px;cursor:pointer;}
+.lbtn:hover{color:#fff;}
 #layout{display:flex;flex:1;overflow:hidden;}
 #sb{width:190px;background:var(--bk);flex-shrink:0;padding:8px 0;display:flex;flex-direction:column;}
 .ns{padding:10px 16px 2px;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:1.5px;}
@@ -89,6 +103,7 @@ input.sir{border-color:var(--red);background:#fff5f5;color:var(--red);font-weigh
 .ploc{display:inline-block;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:600;background:#f0f0f0;color:var(--gray);}
 .procks{margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);}
 .prt{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:4px;}
+.badge-admin{display:inline-block;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:600;background:#e6f4c3;color:#5a7c00;margin-left:6px;}
 .sr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd);}
 .sr:last-child{border-bottom:none;}
 .slb{font-size:11px;color:var(--gray);}
@@ -104,18 +119,34 @@ input.sfi{border:1px solid var(--bd);border-radius:4px;padding:6px 10px;font-siz
 .fi{width:100%;border:1px solid var(--bd);border-radius:5px;padding:8px 10px;font-size:13px;background:#fff;}
 .fi:focus{outline:none;border-color:var(--g);}
 .mf{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd);}
+.loading{text-align:center;padding:40px;color:var(--gray);font-size:13px;}
 </style>
 </head>
 <body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Milburn<span style="color:var(--g)"> Demolition</span></div>
+    <div class="login-tag">Operating System</div>
+    <div class="login-err" id="login-err">Invalid email or password.</div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" id="login-email" type="email" placeholder="you@milburndemolition.com" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="fg"><label class="fl">Password</label><input class="fi" id="login-pass" type="password" placeholder="Your password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn bg" style="width:100%;padding:10px;font-size:14px;margin-top:4px;" onclick="doLogin()">Sign In</button>
+    <div style="margin-top:12px;font-size:11px;color:var(--gray);text-align:center;">First time signing in? Use password: <strong>Milburn2025!</strong></div>
+  </div>
+</div>
+
+<!-- APP -->
 <div id="app">
 <div id="nav">
   <div class="logo">Milburn<span> Demolition</span></div>
   <div style="width:1px;height:22px;background:#333;"></div>
   <div class="tag">Operating System</div>
   <div class="nr">
-    <span style="font-size:11px;color:#555;">Viewing as</span>
-    <select id="usel" onchange="switchUser()"></select>
+    <span style="font-size:11px;color:#888;" id="nav-user"></span>
     <button class="mbtn" onclick="goPage('l10')">&#9654; Meeting</button>
+    <button class="lbtn" onclick="doLogout()">Sign out</button>
   </div>
 </div>
 <div id="layout">
@@ -124,48 +155,54 @@ input.sfi{border:1px solid var(--bd);border-radius:4px;padding:6px 10px;font-siz
   <div class="ni on" onclick="goPage('dashboard')">&#128202; Dashboard</div>
   <div class="ni" onclick="goPage('scorecard')">&#128200; Scorecard</div>
   <div class="ns">Execution</div>
-  <div class="ni" onclick="goPage('rocks')">&#128307; Rocks</div>
+  <div class="ni" onclick="goPage('rocks')">&#9899; Rocks</div>
   <div class="ni" onclick="goPage('todos')">&#9989; To-Dos</div>
   <div class="ni" onclick="goPage('issues')">&#9889; Issues</div>
   <div class="ns">Meetings</div>
   <div class="ni" onclick="goPage('l10')">&#128336; <span id="mnl">Meeting</span></div>
   <div class="ns">Admin</div>
   <div class="ni" onclick="goPage('people')">&#128101; People</div>
-  <div class="ni" onclick="goPage('settings')">&#9881;&#65039; Settings</div>
+  <div class="ni" id="settings-nav" onclick="goPage('settings')">&#9881; Settings</div>
 </div>
 <div id="main">
+
 <div id="page-dashboard" class="pg on">
   <div class="ph"><div class="pt">Dashboard <span id="dq"></span></div><div style="font-size:11px;color:var(--gray);" id="ddate"></div></div>
   <div class="sg" id="dstats"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;">
-    <div class="card"><div class="ch"><div class="ct">Rocks</div></div><div class="cb" id="drocks"></div></div>
-    <div class="card"><div class="ch"><div class="ct">Open To-Dos</div></div><div class="cb" id="dtodos"></div></div>
+    <div class="card"><div class="ch"><div class="ct">&#9899; Rocks</div></div><div class="cb" id="drocks"></div></div>
+    <div class="card"><div class="ch"><div class="ct">&#9989; Open To-Dos</div></div><div class="cb" id="dtodos"></div></div>
   </div>
-  <div class="card" style="margin-top:13px;"><div class="ch"><div class="ct">Issues</div></div><div class="cb" id="dissues"></div></div>
+  <div class="card" style="margin-top:13px;"><div class="ch"><div class="ct">&#9889; Issues</div></div><div class="cb" id="dissues"></div></div>
 </div>
+
 <div id="page-scorecard" class="pg">
-  <div class="ph"><div class="pt">Scorecard</div><button class="btn bg" onclick="openM('metric')">+ Add Metric</button></div>
+  <div class="ph"><div class="pt">&#128200; Scorecard</div><button class="btn bg" onclick="openM('metric')">+ Add Metric</button></div>
   <div class="card"><div class="cb" style="padding:0;overflow-x:auto;"><table class="sct"><thead><tr id="sch"></tr></thead><tbody id="scb"></tbody></table></div></div>
 </div>
+
 <div id="page-rocks" class="pg">
-  <div class="ph"><div class="pt">Rocks <span id="rq"></span></div><button class="btn bg" onclick="openM('rock')">+ Add Rock</button></div>
+  <div class="ph"><div class="pt">&#9899; Rocks <span id="rq"></span></div><button class="btn bg" onclick="openM('rock')">+ Add Rock</button></div>
   <div class="card"><div class="ch"><div class="ct">All Rocks</div><span style="font-size:11px;color:var(--gray);" id="rsum"></span></div><div class="cb" id="rlist"></div></div>
 </div>
+
 <div id="page-todos" class="pg">
-  <div class="ph"><div class="pt">To-Dos</div><button class="btn bg" onclick="openM('todo')">+ Add To-Do</button></div>
+  <div class="ph"><div class="pt">&#9989; To-Dos</div><button class="btn bg" onclick="openM('todo')">+ Add To-Do</button></div>
   <div class="card"><div class="ch"><div class="ct">Weekly To-Do List</div></div><div class="cb" id="tlist"></div></div>
 </div>
+
 <div id="page-issues" class="pg">
-  <div class="ph"><div class="pt">Issues</div><button class="btn bg" onclick="openM('issue')">+ Add Issue</button></div>
+  <div class="ph"><div class="pt">&#9889; Issues</div><button class="btn bg" onclick="openM('issue')">+ Add Issue</button></div>
   <div class="card"><div class="ch"><div class="ct">Issues List</div></div><div class="cb" id="ilist"></div></div>
 </div>
+
 <div id="page-l10" class="pg">
   <div class="ph">
     <div class="pt" id="mpt">Meeting</div>
     <div style="display:flex;gap:8px;">
-      <button class="btn bo" onclick="resetL10()">Reset</button>
-      <button class="btn bo" onclick="goPage('settings')">Agenda</button>
-      <button class="btn bg" onclick="nextL10()">Next</button>
+      <button class="btn bo" onclick="resetL10()">&#8635; Reset</button>
+      <button class="btn bo" onclick="goPage('settings')">&#9881; Agenda</button>
+      <button class="btn bg" onclick="nextL10()">Next &#9654;</button>
     </div>
   </div>
   <div class="l10w">
@@ -176,82 +213,502 @@ input.sfi{border:1px solid var(--bd);border-radius:4px;padding:6px 10px;font-siz
     </div>
   </div>
 </div>
+
 <div id="page-people" class="pg">
-  <div class="ph"><div class="pt">People</div></div>
+  <div class="ph"><div class="pt">&#128101; People</div><button class="btn bg" id="add-person-btn" onclick="openM('person')" style="display:none;">+ Add Person</button></div>
   <div class="pgrid" id="pgrid"></div>
 </div>
+
 <div id="page-settings" class="pg">
-  <div class="ph"><div class="pt">Settings</div></div>
+  <div class="ph"><div class="pt">&#9881; Settings</div></div>
   <div class="card"><div class="ch"><div class="ct">General</div></div><div class="cb">
     <div class="sr"><div><div style="font-size:13px;font-weight:600;">Company Name</div></div><input class="sfi" id="set-company" oninput="saveCfg('company',this.value)"/></div>
     <div class="sr"><div><div style="font-size:13px;font-weight:600;">Quarter / Period</div></div><input class="sfi" id="set-quarter" oninput="saveCfg('quarter',this.value)"/></div>
     <div class="sr"><div><div style="font-size:13px;font-weight:600;">Meeting Name</div></div><input class="sfi" id="set-meetingname" oninput="saveCfg('meetingName',this.value)"/></div>
     <div class="sr"><div><div style="font-size:13px;font-weight:600;">Rocks Label</div></div><input class="sfi" id="set-rockslabel" oninput="saveCfg('rocksLabel',this.value)"/></div>
   </div></div>
-  <div class="card"><div class="ch"><div class="ct">Meeting Agenda</div><div style="display:flex;gap:6px;"><button class="btn bo bs" style="padding:5px 10px;font-size:12px;" onclick="openM('agenda')">+ Item</button><button class="btn bg bs" style="padding:5px 10px;font-size:12px;" onclick="saveAg()">Save</button></div></div><div class="cb" id="aedit"></div></div>
+  <div class="card"><div class="ch"><div class="ct">Meeting Agenda</div><div style="display:flex;gap:6px;"><button class="btn bo bs" style="padding:5px 10px;font-size:12px;" onclick="openM('agenda')">+ Item</button><button class="btn bg bs" style="padding:5px 10px;font-size:12px;" onclick="saveAgenda()">Save</button></div></div><div class="cb" id="aedit"></div></div>
   <div class="card"><div class="ch"><div class="ct">Scorecard Weeks</div></div><div class="cb"><div class="sr"><div style="font-size:13px;font-weight:600;">Weeks to show</div><input class="sfi" type="number" min="1" max="13" id="set-weeks" style="width:70px;" oninput="saveCfg('weeks',+this.value)"/></div></div></div>
-  <div class="card"><div class="ch"><div class="ct">Clear Data</div></div><div class="cb">
-    <div class="sr"><div style="font-size:13px;font-weight:600;">Rocks</div><button class="bs bdel" onclick="clearD('rocks')">Clear</button></div>
-    <div class="sr"><div style="font-size:13px;font-weight:600;">To-Dos</div><button class="bs bdel" onclick="clearD('todos')">Clear</button></div>
-    <div class="sr"><div style="font-size:13px;font-weight:600;">Issues</div><button class="bs bdel" onclick="clearD('issues')">Clear</button></div>
-    <div class="sr"><div style="font-size:13px;font-weight:600;">Scorecard</div><button class="bs bdel" onclick="clearD('scorecard')">Clear</button></div>
+  <div class="card" id="admin-password-section"><div class="ch"><div class="ct">Change Password</div></div><div class="cb">
+    <div class="sr"><div style="font-size:13px;font-weight:600;">New Password</div><input class="sfi" type="password" id="new-pass" placeholder="Enter new password"/></div>
+    <div class="sr"><div style="font-size:13px;font-weight:600;">Confirm Password</div><input class="sfi" type="password" id="confirm-pass" placeholder="Confirm new password"/></div>
+    <button class="btn bg" style="margin-top:8px;" onclick="changePassword()">Update Password</button>
   </div></div>
 </div>
+
 </div></div></div>
 <div id="mbg"><div class="modal"><div class="mt" id="mtitle"></div><div id="mbody"></div><div class="mf"><button class="btn bo" onclick="closeM()">Cancel</button><button class="btn bg" onclick="saveM()">Save</button></div></div></div>
+
 <script>
-const USERS=[
-  {id:'u1',name:'Don',             role:'Operations',      loc:'Chicago',   color:'#A6C820'},
-  {id:'u2',name:'James',           role:'Sales & Strategy',loc:'Chicago',   color:'#1a1a1a'},
-  {id:'u3',name:'Controller',      role:'Finance',         loc:'Chicago',   color:'#3182ce'},
-  {id:'u4',name:'Safety Director', role:'Safety',          loc:'Chicago',   color:'#e53e3e'},
-  {id:'u5',name:'SE Dir. of Sales',role:'Sales',           loc:'Southeast', color:'#48bb78'},
-  {id:'u6',name:'SE Ops Manager',  role:'Operations',      loc:'Southeast', color:'#dd6b20'},
-];
-const K={r:'mbv5r',s:'mbv5s',i:'mbv5i',t:'mbv5t',cfg:'mbv5cfg',ag:'mbv5ag'};
-async function ld(k){try{const r=await window.storage.get(k);return r?JSON.parse(r.value):null;}catch{return null;}}
-async function sv(k,v){try{await window.storage.set(k,JSON.stringify(v));}catch{}}
-const DCFG={company:'Milburn Demolition',quarter:'Q3 2025',meetingName:'Leadership Meeting',rocksLabel:'Quarterly Rocks',weeks:5};
-const DAG=[{id:'a1',name:'Segue',mins:5},{id:'a2',name:'Scorecard Review',mins:5},{id:'a3',name:'Rock Review',mins:5},{id:'a4',name:'Headlines',mins:5},{id:'a5',name:'To-Do Review',mins:5},{id:'a6',name:'Issues',mins:60},{id:'a7',name:'Conclude',mins:5}];
-let rocks=[],sc=[],issues=[],todos=[],cfg={},agenda=[],curU='u1',mtype='',eid=null,l10cur=-1,l10tmr=null,l10s=0;
-async function init(){rocks=await ld(K.r)||[];sc=await ld(K.s)||[];issues=await ld(K.i)||[];todos=await ld(K.t)||[];cfg=await ld(K.cfg)||{...DCFG};agenda=await ld(K.ag)||DAG.map(a=>({...a}));buildDrop();applyCfg();renderAll();}
-function buildDrop(){const s=document.getElementById('usel');s.innerHTML=USERS.map(u=>`<option value="${u.id}">${u.name} — ${u.role}</option>`).join('');s.value=curU;}
-function switchUser(){curU=document.getElementById('usel').value;}
-function applyCfg(){document.getElementById('dq').textContent=cfg.quarter||'';document.getElementById('rq').textContent=cfg.rocksLabel||'';document.getElementById('mpt').textContent=cfg.meetingName||'Meeting';document.getElementById('mnl').textContent=cfg.meetingName||'Meeting';const tot=agenda.reduce((a,i)=>a+(+i.mins||0),0);document.getElementById('atotal').textContent=`${cfg.meetingName||'Meeting'} — ${tot} min`;document.getElementById('ddate').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});['company','quarter','meetingName','rocksLabel','weeks'].forEach(k=>{const el=document.getElementById('set-'+k);if(el)el.value=cfg[k]||'';});renderAEdit();}
-async function saveCfg(k,v){cfg[k]=v;await sv(K.cfg,cfg);applyCfg();}
-function renderAll(){renderDash();renderRocks();renderSC();renderIssues();renderTodos();renderL10();renderPeople();}
-function uname(id){return USERS.find(u=>u.id===id)?.name||id;}
-function dc(s){return s==='on'?'don':s==='off'?'doff':s==='done'?'ddone':'dns';}
-function emp(icon,msg,sub){return`<div class="empty"><div class="ei">${icon}</div><div class="em">${msg}</div><div class="es">${sub}</div></div>`;}
-function uopts(sel){return USERS.map(u=>`<option value="${u.id}"${u.id===sel?' selected':''}>${u.name} — ${u.role}</option>`).join('');}
-function fmt(s){const n=s<0,a=Math.abs(s),m=Math.floor(a/60),ss=a%60;return(n?'-':'')+m+':'+(ss<10?'0':'')+ss;}
-function renderDash(){const on=rocks.filter(r=>r.status==='on').length,off=rocks.filter(r=>r.status==='off').length,ot=todos.filter(t=>!t.done).length;document.getElementById('dstats').innerHTML=`<div class="sc" style="border-top:3px solid var(--g)"><div class="sl">Rocks On Track</div><div class="sv">${on}</div><div class="ss">of ${rocks.length}</div></div><div class="sc" style="border-top:3px solid var(--red)"><div class="sl">Off Track</div><div class="sv">${off}</div><div class="ss">${rocks.filter(r=>r.status==='ns').length} not started</div></div><div class="sc" style="border-top:3px solid var(--org)"><div class="sl">Open Issues</div><div class="sv">${issues.length}</div><div class="ss">to resolve</div></div><div class="sc" style="border-top:3px solid var(--bl)"><div class="sl">Open To-Dos</div><div class="sv">${ot}</div><div class="ss">this period</div></div>`;document.getElementById('drocks').innerHTML=rocks.length?rocks.slice(0,5).map(r=>`<div class="rr"><div class="dot ${dc(r.status)}"></div><div class="rn">${r.name}</div><div class="rs">${uname(r.owner)}</div><b style="font-size:11px;">${r.pct}%</b></div>`).join(''):emp('','No rocks yet','Add your rocks to get started');document.getElementById('dtodos').innerHTML=todos.filter(t=>!t.done).length?todos.filter(t=>!t.done).slice(0,5).map(t=>`<div class="rr"><div class="dot dns"></div><div class="rn">${t.text}</div><div class="rs">${uname(t.owner)}</div><div style="font-size:10px;color:var(--gray);">${t.due}</div></div>`).join(''):emp('','All caught up','');document.getElementById('dissues').innerHTML=issues.length?issues.slice(0,4).map(i=>`<div class="ir"><div class="pip ${i.pri==='high'?'pph':i.pri==='med'?'ppm':'ppl'}"></div><div class="ib"><div class="it">${i.text}</div><div class="im">${uname(i.owner)} - ${i.pri}</div></div></div>`).join(''):emp('','No open issues','');}
-function renderRocks(){document.getElementById('rsum').textContent=rocks.length?`${rocks.filter(r=>r.status==='on').length} on track / ${rocks.length} total`:'';document.getElementById('rlist').innerHTML=rocks.length?rocks.map(r=>`<div class="rr"><div class="dot ${dc(r.status)}"></div><div class="rn">${r.name}</div><div class="rs" style="min-width:90px;">${uname(r.owner)}</div><select class="is" onchange="upR(${r.id},'status',this.value)"><option value="ns"${r.status==='ns'?' selected':''}>Not Started</option><option value="on"${r.status==='on'?' selected':''}>On Track</option><option value="off"${r.status==='off'?' selected':''}>Off Track</option><option value="done"${r.status==='done'?' selected':''}>Complete</option></select><input class="inum" type="number" min="0" max="100" value="${r.pct}" onchange="upR(${r.id},'pct',+this.value)"/>%<div class="bar"><div class="barf" style="width:${r.pct}%"></div></div><span style="font-size:10px;color:var(--gray);">${r.due||''}</span><button class="bs bedit" onclick="editR(${r.id})">Edit</button><button class="bs bdel" onclick="del('rock',${r.id})">X</button></div>`).join(''):emp('','No rocks yet','Click + Add Rock');}
-async function upR(id,f,v){const r=rocks.find(r=>r.id===id);if(!r)return;r[f]=v;await sv(K.r,rocks);renderRocks();renderDash();}
-function editR(id){const r=rocks.find(r=>r.id===id);if(!r)return;mtype='rock';eid=id;document.getElementById('mtitle').textContent='Edit Rock';document.getElementById('mbody').innerHTML=rform(r);document.getElementById('mbg').classList.add('open');}
-async function del(type,id){if(type==='rock'){rocks=rocks.filter(r=>r.id!==id);await sv(K.r,rocks);renderRocks();renderDash();}else if(type==='sc'){sc=sc.filter(s=>s.id!==id);await sv(K.s,sc);renderSC();}else if(type==='issue'){issues=issues.filter(i=>i.id!==id);await sv(K.i,issues);renderIssues();renderDash();}else if(type==='todo'){todos=todos.filter(t=>t.id!==id);await sv(K.t,todos);renderTodos();renderDash();}else if(type==='agenda'){agenda=agenda.filter(a=>a.id!==id);await sv(K.ag,agenda);applyCfg();renderL10();}}
-function renderSC(){const w=cfg.weeks||5;document.getElementById('sch').innerHTML=`<th>Measurable</th><th>Owner</th><th>Goal</th>${Array.from({length:w},(_,i)=>`<th>Wk ${i+1}</th>`).join('')}<th></th>`;const b=document.getElementById('scb');if(!sc.length){b.innerHTML=`<tr><td colspan="${w+4}" style="padding:26px;text-align:center;color:var(--gray);">No metrics yet</td></tr>`;return;}b.innerHTML=sc.map(m=>{const vals=[...m.vals];while(vals.length<w)vals.push('');return`<tr><td style="font-weight:700;">${m.name}</td><td style="color:var(--gray);">${uname(m.owner)}</td><td style="font-weight:700;color:var(--g);">${m.goal}</td>${vals.slice(0,w).map((v,i)=>{let c='';if(v!==''){const n=parseFloat(v),g=parseFloat(m.goal);if(!isNaN(n)&&!isNaN(g))c=((m.dir==='up'&&n>=g)||(m.dir==='down'&&n<=g))?'sig':'sir';}return`<td><input class="si ${c}" value="${v}" onchange="upSC(${m.id},${i},this.value)" placeholder="-"/></td>`;}).join('')}<td><button class="bs bdel" onclick="del('sc',${m.id})">X</button></td></tr>`;}).join('');}
-async function upSC(id,i,v){const m=sc.find(s=>s.id===id);if(!m)return;while(m.vals.length<=i)m.vals.push('');m.vals[i]=v;await sv(K.s,sc);renderSC();}
-function renderIssues(){const sorted=[...issues].sort((a,b)=>({high:0,med:1,low:2}[a.pri]-{high:0,med:1,low:2}[b.pri]));document.getElementById('ilist').innerHTML=sorted.length?sorted.map(i=>`<div class="ir"><div class="pip ${i.pri==='high'?'pph':i.pri==='med'?'ppm':'ppl'}"></div><div class="ib"><div class="it">${i.text}</div><div class="im">${uname(i.owner)} - ${i.pri} priority</div></div><button class="bs bsolve" onclick="del('issue',${i.id})">Solved</button><button class="bs bdel" onclick="del('issue',${i.id})">X</button></div>`).join(''):emp('','No open issues','Add issues to work through in your meeting');}
-function renderTodos(){const rows=[...todos.filter(t=>!t.done),...todos.filter(t=>t.done)];document.getElementById('tlist').innerHTML=rows.length?rows.map(t=>`<div class="tr_"><input type="checkbox" class="tcb" ${t.done?'checked':''} onchange="togT(${t.id})"/><div class="tt${t.done?' done':''}">${t.text}</div><div class="rs" style="min-width:80px;">${uname(t.owner)}</div><div class="rs" style="min-width:65px;">${t.due||''}</div><button class="bs bdel" onclick="del('todo',${t.id})">X</button></div>`).join(''):emp('','No to-dos','Add weekly to-dos to track accountability');}
-async function togT(id){const t=todos.find(t=>t.id===id);if(!t)return;t.done=!t.done;await sv(K.t,todos);renderTodos();renderDash();}
-function renderL10(){document.getElementById('lagenda').innerHTML=agenda.map((item,i)=>`<div class="ai ${i===l10cur?'cur':i<l10cur?'da':''}" onclick="gotoL10(${i})"><div class="an">${i+1}</div><div class="aname">${item.name}</div><div class="amin">${item.mins}m</div><div class="atm" id="at${i}">${i===l10cur?fmt(l10s):''}</div></div>`).join('');const tot=agenda.reduce((a,i)=>a+(+i.mins||0),0);document.getElementById('atotal').textContent=`${cfg.meetingName||'Meeting'} — ${tot} min`;}
-function gotoL10(i){if(l10tmr)clearInterval(l10tmr);l10cur=i;l10s=agenda[i].mins*60;document.getElementById('lcur').textContent=agenda[i].name;renderL10Content(i);l10tmr=setInterval(()=>{l10s--;const el=document.getElementById('at'+l10cur);if(el)el.textContent=fmt(l10s);document.getElementById('lclk').textContent=fmt(l10s);if(l10s<=0){clearInterval(l10tmr);document.getElementById('lclk').textContent='Time!';}},1000);renderL10();}
-function nextL10(){gotoL10(Math.min(l10cur+1,agenda.length-1));}
-function resetL10(){if(l10tmr)clearInterval(l10tmr);l10cur=-1;l10s=0;renderL10();document.getElementById('lcur').textContent='Select an item to begin';document.getElementById('lclk').textContent='';document.getElementById('lbody').innerHTML=emp('','Ready','Click an item or press Next');}
-function renderL10Content(i){const nm=agenda[i].name.toLowerCase();let h='';if(nm.includes('segue'))h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Each person shares one personal or professional good news.</p>${USERS.map(u=>`<div class="rr"><div style="width:9px;height:9px;border-radius:50%;background:${u.color};flex-shrink:0;"></div><div class="rn">${u.name}</div><div class="rs">${u.role}</div></div>`).join('')}`;else if(nm.includes('scorecard'))h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Review each number.</p>${sc.length?sc.map(m=>`<div class="rr"><div class="rn">${m.name}</div><div class="rs">${uname(m.owner)}</div><b style="color:var(--g);font-size:12px;">Goal: ${m.goal}</b></div>`).join(''):emp('','No metrics','')}`;else if(nm.includes('rock'))h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">On Track or Off Track?</p>${rocks.length?rocks.map(r=>`<div class="rr"><div class="dot ${dc(r.status)}"></div><div class="rn">${r.name}</div><div class="rs">${uname(r.owner)}</div></div>`).join(''):emp('','No rocks','')}`;else if(nm.includes('headline'))h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Headlines only - one sentence each.</p><div style="background:var(--lt);border-radius:6px;padding:16px;min-height:80px;font-size:13px;color:var(--gray);">Share verbally.</div>`;else if(nm.includes('to-do')||nm.includes('todo'))h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Done or Not Done?</p>${todos.length?todos.map(t=>`<div class="tr_"><input type="checkbox" class="tcb" ${t.done?'checked':''} onchange="togT(${t.id})"/><div class="tt${t.done?' done':''}">${t.text}</div><div class="rs">${uname(t.owner)}</div></div>`).join(''):emp('','No to-dos','')}`;else if(nm.includes('issue'))h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Identify - Discuss - Solve</p>${issues.length?issues.map(i=>`<div class="ir"><div class="pip ${i.pri==='high'?'pph':i.pri==='med'?'ppm':'ppl'}"></div><div class="ib"><div class="it">${i.text}</div><div class="im">${uname(i.owner)}</div></div><button class="bs bsolve" onclick="del('issue',${i.id});renderL10Content(${l10cur})">Solved</button></div>`).join(''):emp('','No issues','Great meeting!')}`;else if(nm.includes('conclude'))h=`<div style="text-align:center;padding:20px;"><div style="font-size:40px;margin-bottom:10px;">Done</div><div style="font-size:18px;font-weight:800;margin-bottom:8px;">${cfg.meetingName||'Meeting'} Complete</div><p style="font-size:12px;color:var(--gray);margin-bottom:16px;">Rate 1-10.</p><div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<div onclick="this.style.background='#A6C820'" style="width:38px;height:38px;border-radius:50%;background:var(--lt);border:2px solid var(--bd);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;">${n}</div>`).join('')}</div></div>`;else h=`<div style="font-size:13px;color:var(--gray);padding:12px;">Work through ${agenda[i].name} - ${agenda[i].mins} minutes.</div>`;document.getElementById('lbody').innerHTML=h;}
-function renderPeople(){document.getElementById('pgrid').innerHTML=USERS.map(u=>{const ur=rocks.filter(r=>r.owner===u.id);return`<div class="pcard"><div class="ptop" style="background:${u.color};"></div><div class="pbd"><div class="pname">${u.name}</div><div class="prole">${u.role}</div><span class="ploc">${u.loc}</span><div class="procks"><div class="prt">Rocks (${ur.length})</div>${ur.length?ur.map(r=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;font-size:11px;"><div class="dot ${dc(r.status)}" style="width:7px;height:7px;"></div>${r.name}</div>`).join(''):'<div style="font-size:11px;color:var(--gray);">No rocks assigned</div>'}</div></div></div>`;}).join('');}
-function renderAEdit(){document.getElementById('aedit').innerHTML=agenda.map((item,i)=>`<div class="sr"><div style="flex:1;"><input style="border:1px solid var(--bd);border-radius:4px;padding:5px 8px;font-size:13px;width:65%;" value="${item.name}" onchange="agenda[${i}].name=this.value"/></div><div style="display:flex;align-items:center;gap:5px;"><input type="number" style="border:1px solid var(--bd);border-radius:4px;padding:5px 8px;font-size:13px;width:55px;" value="${item.mins}" min="1" onchange="agenda[${i}].mins=+this.value"/><span style="font-size:11px;color:var(--gray);">min</span><button class="bs" style="background:#f0f0f0;" onclick="mvAg(${i},-1)">Up</button><button class="bs" style="background:#f0f0f0;" onclick="mvAg(${i},1)">Dn</button><button class="bs bdel" onclick="del('agenda','${item.id}')">X</button></div></div>`).join('');}
-function mvAg(i,d){const j=i+d;if(j<0||j>=agenda.length)return;[agenda[i],agenda[j]]=[agenda[j],agenda[i]];renderAEdit();}
-async function saveAg(){await sv(K.ag,agenda);applyCfg();renderL10();alert('Saved!');}
-async function clearD(type){if(!confirm('Clear '+type+'?'))return;if(type==='rocks'){rocks=[];await sv(K.r,rocks);}else if(type==='todos'){todos=[];await sv(K.t,todos);}else if(type==='issues'){issues=[];await sv(K.i,issues);}else if(type==='scorecard'){sc=[];await sv(K.s,sc);}renderAll();}
-function rform(r){return`<div class="fg"><label class="fl">Rock Name</label><input class="fi" id="mn" value="${r?.name||''}" placeholder="What needs to get done?"/></div><div class="fg"><label class="fl">Owner</label><select class="fi" id="mo">${uopts(r?.owner||USERS[0].id)}</select></div><div class="fg"><label class="fl">Due Date</label><input class="fi" id="md" value="${r?.due||''}" placeholder="e.g. Sep 30"/></div>`;}
-function openM(type){mtype=type;eid=null;const titles={rock:'Add Rock',metric:'Add Metric',issue:'Add Issue',todo:'Add To-Do',agenda:'Add Agenda Item'};document.getElementById('mtitle').textContent=titles[type];const bodies={rock:rform(null),metric:`<div class="fg"><label class="fl">Measurable</label><input class="fi" id="mn" placeholder="e.g. Weekly Revenue"/></div><div class="fg"><label class="fl">Owner</label><select class="fi" id="mo">${uopts(USERS[0].id)}</select></div><div class="fg"><label class="fl">Goal</label><input class="fi" id="mg" placeholder="e.g. $120K"/></div><div class="fg"><label class="fl">Direction</label><select class="fi" id="mdr"><option value="up">Higher is better</option><option value="down">Lower is better</option></select></div>`,issue:`<div class="fg"><label class="fl">Issue</label><input class="fi" id="mn" placeholder="Describe the issue..."/></div><div class="fg"><label class="fl">Owner</label><select class="fi" id="mo">${uopts(USERS[0].id)}</select></div><div class="fg"><label class="fl">Priority</label><select class="fi" id="mp"><option value="high">High</option><option value="med">Medium</option><option value="low">Low</option></select></div>`,todo:`<div class="fg"><label class="fl">To-Do</label><input class="fi" id="mn" placeholder="What needs to happen?"/></div><div class="fg"><label class="fl">Owner</label><select class="fi" id="mo">${uopts(USERS[0].id)}</select></div><div class="fg"><label class="fl">Due</label><input class="fi" id="md" placeholder="This week / Next week"/></div>`,agenda:`<div class="fg"><label class="fl">Item Name</label><input class="fi" id="mn" placeholder="e.g. Safety Update"/></div><div class="fg"><label class="fl">Minutes</label><input class="fi" type="number" id="mmin" value="10" min="1"/></div>`};document.getElementById('mbody').innerHTML=bodies[type]||'';document.getElementById('mbg').classList.add('open');setTimeout(()=>document.getElementById('mn')?.focus(),50);}
-function closeM(){document.getElementById('mbg').classList.remove('open');eid=null;}
-async function saveM(){const name=document.getElementById('mn')?.value?.trim();const owner=document.getElementById('mo')?.value||USERS[0].id;if(mtype==='rock'){if(!name)return alert('Name required.');const due=document.getElementById('md')?.value||'';if(eid){const r=rocks.find(r=>r.id===eid);if(r){r.name=name;r.owner=owner;r.due=due;}}else rocks.push({id:Date.now(),name,owner,status:'ns',pct:0,due});await sv(K.r,rocks);renderRocks();renderDash();renderPeople();}else if(mtype==='metric'){if(!name)return alert('Name required.');sc.push({id:Date.now(),name,owner,goal:document.getElementById('mg')?.value||'',dir:document.getElementById('mdr')?.value||'up',vals:[]});await sv(K.s,sc);renderSC();}else if(mtype==='issue'){if(!name)return alert('Required.');issues.push({id:Date.now(),text:name,owner,pri:document.getElementById('mp')?.value||'med'});await sv(K.i,issues);renderIssues();renderDash();}else if(mtype==='todo'){if(!name)return alert('Required.');todos.push({id:Date.now(),text:name,owner,due:document.getElementById('md')?.value||'',done:false});await sv(K.t,todos);renderTodos();renderDash();}else if(mtype==='agenda'){if(!name)return alert('Required.');agenda.push({id:'a'+Date.now(),name,mins:+document.getElementById('mmin')?.value||10});await sv(K.ag,agenda);applyCfg();renderAEdit();renderL10();}closeM();}
+const SUPA_URL = 'https://kuyvscwkxqadtlwdwzwd.supabase.co';
+const SUPA_KEY = 'sb_publishable_P79Ai4mNaiw3fZGCXSqOjA_4lxjWWkX';
+const API = (path) => `${SUPA_URL}/rest/v1/${path}`;
+const H = {
+  'Content-Type': 'application/json',
+  'apikey': SUPA_KEY,
+  'Authorization': `Bearer ${SUPA_KEY}`,
+  'Prefer': 'return=representation'
+};
+
+async function db(method, path, data) {
+  try {
+    const res = await axios({ method, url: API(path), headers: H, data });
+    return res.data;
+  } catch(e) {
+    console.error('DB error:', e.response?.data || e.message);
+    return null;
+  }
+}
+
+let currentUser = null;
+let users = [], rocks = [], scorecard = [], issues = [], todos = [], agenda = [], cfg = {};
+let mtype = '', eid = null, l10cur = -1, l10tmr = null, l10s = 0;
+
+// ── LOGIN ────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-err');
+  err.style.display = 'none';
+  if (!email || !pass) { err.textContent = 'Please enter your email and password.'; err.style.display = 'block'; return; }
+  const result = await db('GET', `users?email=eq.${encodeURIComponent(email)}&select=*`);
+  if (!result || result.length === 0) { err.textContent = 'Email not found.'; err.style.display = 'block'; return; }
+  const user = result[0];
+  // Simple password check — first login uses default, then stored password
+  const validPass = (user.password_hash === 'pending' && pass === 'Milburn2025!') || user.password_hash === pass;
+  if (!validPass) { err.textContent = 'Incorrect password.'; err.style.display = 'block'; return; }
+  // If first login, update password hash to the default so it works going forward
+  if (user.password_hash === 'pending') {
+    await db('PATCH', `users?id=eq.${user.id}`, { password_hash: 'Milburn2025!' });
+    user.password_hash = 'Milburn2025!';
+  }
+  currentUser = user;
+  sessionStorage.setItem('milburn_user', JSON.stringify(user));
+  showApp();
+}
+
+function doLogout() {
+  sessionStorage.removeItem('milburn_user');
+  currentUser = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+async function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('nav-user').textContent = currentUser.name + (currentUser.access_level === 'admin' ? ' (Admin)' : '');
+  // Show/hide admin features
+  if (currentUser.access_level === 'admin') {
+    document.getElementById('add-person-btn').style.display = 'inline-flex';
+  }
+  await loadAll();
+}
+
+async function changePassword() {
+  const np = document.getElementById('new-pass').value;
+  const cp = document.getElementById('confirm-pass').value;
+  if (!np || np.length < 6) return alert('Password must be at least 6 characters.');
+  if (np !== cp) return alert('Passwords do not match.');
+  await db('PATCH', `users?id=eq.${currentUser.id}`, { password_hash: np });
+  currentUser.password_hash = np;
+  sessionStorage.setItem('milburn_user', JSON.stringify(currentUser));
+  alert('Password updated!');
+  document.getElementById('new-pass').value = '';
+  document.getElementById('confirm-pass').value = '';
+}
+
+// ── LOAD ALL ─────────────────────────────────────────────────
+async function loadAll() {
+  document.getElementById('ddate').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const [u, r, s, is, t, ag, c] = await Promise.all([
+    db('GET', 'users?select=*&order=name'),
+    db('GET', 'rocks?select=*&order=created_at'),
+    db('GET', 'scorecard?select=*&order=created_at'),
+    db('GET', 'issues?select=*&order=created_at'),
+    db('GET', 'todos?select=*&order=created_at'),
+    db('GET', 'agenda?select=*&order=sort_order'),
+    db('GET', 'settings?select=*&limit=1'),
+  ]);
+  users = u || [];
+  rocks = r || [];
+  scorecard = s || [];
+  issues = is || [];
+  todos = t || [];
+  agenda = ag || [];
+  cfg = (c && c[0]) || { company:'Milburn Demolition', quarter:'Q3 2025', meeting_name:'Leadership Meeting', rocks_label:'Quarterly Rocks', weeks:5 };
+  applyCfg();
+  renderAll();
+}
+
+function applyCfg() {
+  document.getElementById('dq').textContent = cfg.quarter || '';
+  document.getElementById('rq').textContent = cfg.rocks_label || '';
+  document.getElementById('mpt').textContent = cfg.meeting_name || 'Meeting';
+  document.getElementById('mnl').textContent = cfg.meeting_name || 'Meeting';
+  const tot = agenda.reduce((a,i) => a + (+i.mins||0), 0);
+  document.getElementById('atotal').textContent = `${cfg.meeting_name||'Meeting'} — ${tot} min`;
+  ['company','quarter','meetingName','rocksLabel','weeks'].forEach(k => {
+    const el = document.getElementById('set-'+k);
+    const dbk = k === 'meetingName' ? 'meeting_name' : k === 'rocksLabel' ? 'rocks_label' : k;
+    if (el) el.value = cfg[dbk] || '';
+  });
+  renderAEdit();
+}
+
+async function saveCfg(k, v) {
+  const dbk = k === 'meetingName' ? 'meeting_name' : k === 'rocksLabel' ? 'rocks_label' : k;
+  cfg[dbk] = v;
+  await db('PATCH', 'settings?id=eq.1', { [dbk]: v });
+  applyCfg();
+}
+
+function renderAll() { renderDash(); renderRocks(); renderSC(); renderIssues(); renderTodos(); renderL10(); renderPeople(); }
+
+// ── HELPERS ──────────────────────────────────────────────────
+function uname(id) { return users.find(u => u.id === id)?.name || 'Unknown'; }
+function dc(s) { return s==='on'?'don':s==='off'?'doff':s==='done'?'ddone':'dns'; }
+function emp(icon, msg, sub) { return `<div class="empty"><div class="ei">${icon}</div><div class="em">${msg}</div><div class="es">${sub}</div></div>`; }
+function uopts(sel) { return users.map(u => `<option value="${u.id}"${u.id===sel?' selected':''}>${u.name} — ${u.role}</option>`).join(''); }
+function fmt(s) { const n=s<0,a=Math.abs(s),m=Math.floor(a/60),ss=a%60; return(n?'-':'')+m+':'+(ss<10?'0':'')+ss; }
+function isAdmin() { return currentUser?.access_level === 'admin'; }
+
+// ── DASHBOARD ────────────────────────────────────────────────
+function renderDash() {
+  const on=rocks.filter(r=>r.status==='on').length, off=rocks.filter(r=>r.status==='off').length, ot=todos.filter(t=>!t.done).length;
+  document.getElementById('dstats').innerHTML=`
+    <div class="sc" style="border-top:3px solid var(--g)"><div class="sl">Rocks On Track</div><div class="sv">${on}</div><div class="ss">of ${rocks.length}</div></div>
+    <div class="sc" style="border-top:3px solid var(--red)"><div class="sl">Off Track</div><div class="sv">${off}</div><div class="ss">${rocks.filter(r=>r.status==='ns').length} not started</div></div>
+    <div class="sc" style="border-top:3px solid var(--org)"><div class="sl">Open Issues</div><div class="sv">${issues.length}</div><div class="ss">to resolve</div></div>
+    <div class="sc" style="border-top:3px solid var(--bl)"><div class="sl">Open To-Dos</div><div class="sv">${ot}</div><div class="ss">this period</div></div>`;
+  document.getElementById('drocks').innerHTML = rocks.length
+    ? rocks.slice(0,5).map(r=>`<div class="rr"><div class="dot ${dc(r.status)}"></div><div class="rn">${r.name}</div><div class="rs">${uname(r.owner_id)}</div><b style="font-size:11px;">${r.pct}%</b></div>`).join('')
+    : emp('','No rocks yet','Add your rocks to get started');
+  document.getElementById('dtodos').innerHTML = todos.filter(t=>!t.done).length
+    ? todos.filter(t=>!t.done).slice(0,5).map(t=>`<div class="rr"><div class="dot dns"></div><div class="rn">${t.text}</div><div class="rs">${uname(t.owner_id)}</div><div style="font-size:10px;color:var(--gray);">${t.due_date||''}</div></div>`).join('')
+    : emp('','All caught up','');
+  document.getElementById('dissues').innerHTML = issues.length
+    ? issues.slice(0,4).map(i=>`<div class="ir"><div class="pip ${i.priority==='high'?'pph':i.priority==='med'?'ppm':'ppl'}"></div><div class="ib"><div class="it">${i.text}</div><div class="im">${uname(i.owner_id)} · ${i.priority}</div></div></div>`).join('')
+    : emp('','No open issues','');
+}
+
+// ── ROCKS ────────────────────────────────────────────────────
+function renderRocks() {
+  document.getElementById('rsum').textContent = rocks.length ? `${rocks.filter(r=>r.status==='on').length} on track / ${rocks.length} total` : '';
+  document.getElementById('rlist').innerHTML = rocks.length
+    ? rocks.map(r=>`<div class="rr">
+        <div class="dot ${dc(r.status)}"></div>
+        <div class="rn">${r.name}</div>
+        <div class="rs" style="min-width:90px;">${uname(r.owner_id)}</div>
+        <select class="is" onchange="upR('${r.id}','status',this.value)">
+          <option value="ns"${r.status==='ns'?' selected':''}>Not Started</option>
+          <option value="on"${r.status==='on'?' selected':''}>On Track</option>
+          <option value="off"${r.status==='off'?' selected':''}>Off Track</option>
+          <option value="done"${r.status==='done'?' selected':''}>Complete</option>
+        </select>
+        <input class="inum" type="number" min="0" max="100" value="${r.pct}" onchange="upR('${r.id}','pct',+this.value)"/>%
+        <div class="bar"><div class="barf" style="width:${r.pct}%"></div></div>
+        <span style="font-size:10px;color:var(--gray);">${r.due_date||''}</span>
+        <button class="bs bedit" onclick="editR('${r.id}')">Edit</button>
+        <button class="bs bdel" onclick="delItem('rock','${r.id}')">X</button>
+      </div>`).join('')
+    : emp('','No rocks yet','Click + Add Rock');
+}
+async function upR(id, f, v) {
+  await db('PATCH', `rocks?id=eq.${id}`, { [f]: v });
+  const r = rocks.find(r=>r.id===id); if(r) r[f]=v;
+  renderRocks(); renderDash();
+}
+function editR(id) {
+  const r = rocks.find(r=>r.id===id); if(!r) return;
+  mtype='rock'; eid=id;
+  document.getElementById('mtitle').textContent='Edit Rock';
+  document.getElementById('mbody').innerHTML=rform(r);
+  document.getElementById('mbg').classList.add('open');
+}
+async function delItem(type, id) {
+  if(!confirm('Are you sure?')) return;
+  if(type==='rock') { await db('DELETE',`rocks?id=eq.${id}`); rocks=rocks.filter(r=>r.id!==id); renderRocks(); renderDash(); renderPeople(); }
+  else if(type==='sc') { await db('DELETE',`scorecard?id=eq.${id}`); scorecard=scorecard.filter(s=>s.id!==id); renderSC(); }
+  else if(type==='issue') { await db('DELETE',`issues?id=eq.${id}`); issues=issues.filter(i=>i.id!==id); renderIssues(); renderDash(); }
+  else if(type==='todo') { await db('DELETE',`todos?id=eq.${id}`); todos=todos.filter(t=>t.id!==id); renderTodos(); renderDash(); }
+  else if(type==='person') { await db('DELETE',`users?id=eq.${id}`); users=users.filter(u=>u.id!==id); renderPeople(); }
+  else if(type==='agenda') { await db('DELETE',`agenda?id=eq.${id}`); agenda=agenda.filter(a=>a.id!==id); applyCfg(); renderL10(); }
+}
+
+// ── SCORECARD ────────────────────────────────────────────────
+function renderSC() {
+  const w = cfg.weeks || 5;
+  document.getElementById('sch').innerHTML=`<th>Measurable</th><th>Owner</th><th>Goal</th>${Array.from({length:w},(_,i)=>`<th>Wk ${i+1}</th>`).join('')}<th></th>`;
+  const b = document.getElementById('scb');
+  if(!scorecard.length){b.innerHTML=`<tr><td colspan="${w+4}" style="padding:26px;text-align:center;color:var(--gray);">No metrics yet — click + Add Metric</td></tr>`;return;}
+  b.innerHTML = scorecard.map(m => {
+    const vals = (m.vals||[...Array(w)].map(()=>''));
+    while(vals.length<w) vals.push('');
+    return`<tr><td style="font-weight:700;">${m.name}</td><td style="color:var(--gray);">${uname(m.owner_id)}</td><td style="font-weight:700;color:var(--g);">${m.goal}</td>
+    ${vals.slice(0,w).map((v,i)=>{
+      let c='';
+      if(v!==''){const n=parseFloat(v),g=parseFloat(m.goal);if(!isNaN(n)&&!isNaN(g))c=((m.direction==='up'&&n>=g)||(m.direction==='down'&&n<=g))?'sig':'sir';}
+      return`<td><input class="si ${c}" value="${v}" onchange="upSC('${m.id}',${i},this.value)" placeholder="—"/></td>`;
+    }).join('')}
+    <td><button class="bs bdel" onclick="delItem('sc','${m.id}')">X</button></td></tr>`;
+  }).join('');
+}
+async function upSC(id, i, v) {
+  const m = scorecard.find(s=>s.id===id); if(!m) return;
+  if(!m.vals) m.vals=[]; while(m.vals.length<=i) m.vals.push('');
+  m.vals[i]=v;
+  await db('PATCH', `scorecard?id=eq.${id}`, { vals: m.vals });
+  renderSC();
+}
+
+// ── ISSUES ───────────────────────────────────────────────────
+function renderIssues() {
+  const sorted=[...issues].sort((a,b)=>({high:0,med:1,low:2}[a.priority]-{high:0,med:1,low:2}[b.priority]));
+  document.getElementById('ilist').innerHTML = sorted.length
+    ? sorted.map(i=>`<div class="ir">
+        <div class="pip ${i.priority==='high'?'pph':i.priority==='med'?'ppm':'ppl'}"></div>
+        <div class="ib"><div class="it">${i.text}</div><div class="im">${uname(i.owner_id)} · ${i.priority} priority</div></div>
+        <button class="bs bsolve" onclick="solveIssue('${i.id}')">Solved ✓</button>
+        <button class="bs bdel" onclick="delItem('issue','${i.id}')">X</button>
+      </div>`).join('')
+    : emp('','No open issues','Add issues to work through in your meeting');
+}
+async function solveIssue(id) {
+  await db('DELETE',`issues?id=eq.${id}`);
+  issues=issues.filter(i=>i.id!==id);
+  renderIssues(); renderDash();
+}
+
+// ── TODOS ─────────────────────────────────────────────────────
+function renderTodos() {
+  const rows=[...todos.filter(t=>!t.done),...todos.filter(t=>t.done)];
+  document.getElementById('tlist').innerHTML = rows.length
+    ? rows.map(t=>`<div class="tr_">
+        <input type="checkbox" class="tcb" ${t.done?'checked':''} onchange="togT('${t.id}')"/>
+        <div class="tt${t.done?' done':''}">${t.text}</div>
+        <div class="rs" style="min-width:80px;">${uname(t.owner_id)}</div>
+        <div class="rs" style="min-width:65px;">${t.due_date||''}</div>
+        <button class="bs bdel" onclick="delItem('todo','${t.id}')">X</button>
+      </div>`).join('')
+    : emp('','No to-dos','Add weekly to-dos to track accountability');
+}
+async function togT(id) {
+  const t=todos.find(t=>t.id===id); if(!t) return;
+  t.done=!t.done;
+  await db('PATCH',`todos?id=eq.${id}`,{done:t.done});
+  renderTodos(); renderDash();
+}
+
+// ── LEVEL 10 ─────────────────────────────────────────────────
+function renderL10() {
+  document.getElementById('lagenda').innerHTML = agenda.map((item,i)=>`
+    <div class="ai ${i===l10cur?'cur':i<l10cur?'da':''}" onclick="gotoL10(${i})">
+      <div class="an">${i+1}</div>
+      <div class="aname">${item.name}</div>
+      <div class="amin">${item.mins}m</div>
+      <div class="atm" id="at${i}">${i===l10cur?fmt(l10s):''}</div>
+    </div>`).join('');
+  const tot=agenda.reduce((a,i)=>a+(+i.mins||0),0);
+  document.getElementById('atotal').textContent=`${cfg.meeting_name||'Meeting'} — ${tot} min`;
+}
+function gotoL10(i) {
+  if(l10tmr) clearInterval(l10tmr);
+  l10cur=i; l10s=agenda[i].mins*60;
+  document.getElementById('lcur').textContent=agenda[i].name;
+  renderL10Content(i);
+  l10tmr=setInterval(()=>{
+    l10s--;
+    const el=document.getElementById('at'+l10cur); if(el) el.textContent=fmt(l10s);
+    document.getElementById('lclk').textContent=fmt(l10s);
+    if(l10s<=0){clearInterval(l10tmr);document.getElementById('lclk').textContent='Time!';}
+  },1000);
+  renderL10();
+}
+function nextL10() { gotoL10(Math.min(l10cur+1,agenda.length-1)); }
+function resetL10() {
+  if(l10tmr) clearInterval(l10tmr); l10cur=-1; l10s=0; renderL10();
+  document.getElementById('lcur').textContent='Select an item to begin';
+  document.getElementById('lclk').textContent='';
+  document.getElementById('lbody').innerHTML=emp('','Ready','Click an item or press Next');
+}
+function renderL10Content(i) {
+  const nm=agenda[i].name.toLowerCase(); let h='';
+  if(nm.includes('segue')) h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Each person shares one personal or professional good news.</p>${users.map(u=>`<div class="rr"><div style="width:9px;height:9px;border-radius:50%;background:${u.color};flex-shrink:0;"></div><div class="rn">${u.name}</div><div class="rs">${u.role}</div></div>`).join('')}`;
+  else if(nm.includes('scorecard')) h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Review each number — on or off track?</p>${scorecard.length?scorecard.map(m=>`<div class="rr"><div class="rn">${m.name}</div><div class="rs">${uname(m.owner_id)}</div><b style="color:var(--g);font-size:12px;">Goal: ${m.goal}</b></div>`).join(''):emp('','No metrics','')}`;
+  else if(nm.includes('rock')) h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Each owner: On Track or Off Track.</p>${rocks.length?rocks.map(r=>`<div class="rr"><div class="dot ${dc(r.status)}"></div><div class="rn">${r.name}</div><div class="rs">${uname(r.owner_id)}</div><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:${r.status==='on'?'#e6f4c3':r.status==='off'?'#fed7d7':'#e2e8f0'};color:${r.status==='on'?'#5a7c00':r.status==='off'?'#9b2c2c':'#4a5568'};">${r.status==='on'?'On Track':r.status==='off'?'Off Track':'Not Started'}</span></div>`).join(''):emp('','No rocks','')}`;
+  else if(nm.includes('headline')) h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Headlines only — one sentence each, no discussion.</p><div style="background:var(--lt);border-radius:6px;padding:16px;min-height:80px;font-size:13px;color:var(--gray);">Share verbally.</div>`;
+  else if(nm.includes('to-do')||nm.includes('todo')) h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Each to-do: Done or Not Done?</p>${todos.length?todos.map(t=>`<div class="tr_"><input type="checkbox" class="tcb" ${t.done?'checked':''} onchange="togT('${t.id}')"/><div class="tt${t.done?' done':''}">${t.text}</div><div class="rs">${uname(t.owner_id)}</div></div>`).join(''):emp('','No to-dos','')}`;
+  else if(nm.includes('issue')) h=`<p style="font-size:12px;color:var(--gray);margin-bottom:12px;"><strong>Identify → Discuss → Solve</strong></p>${issues.length?issues.map(i=>`<div class="ir"><div class="pip ${i.priority==='high'?'pph':i.priority==='med'?'ppm':'ppl'}"></div><div class="ib"><div class="it">${i.text}</div><div class="im">${uname(i.owner_id)}</div></div><button class="bs bsolve" onclick="solveIssue('${i.id}')">Solved ✓</button></div>`).join(''):emp('','No issues','Great meeting!')}`;
+  else if(nm.includes('conclude')) h=`<div style="text-align:center;padding:20px;"><div style="font-size:40px;margin-bottom:10px;">🏁</div><div style="font-size:18px;font-weight:800;margin-bottom:8px;">${cfg.meeting_name||'Meeting'} Complete</div><p style="font-size:12px;color:var(--gray);margin-bottom:16px;">Rate the meeting 1–10.</p><div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<div onclick="this.style.background='#A6C820'" style="width:38px;height:38px;border-radius:50%;background:var(--lt);border:2px solid var(--bd);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;">${n}</div>`).join('')}</div></div>`;
+  else h=`<div style="font-size:13px;color:var(--gray);padding:12px;">Work through <strong>${agenda[i].name}</strong> — ${agenda[i].mins} minutes.</div>`;
+  document.getElementById('lbody').innerHTML=h;
+}
+
+// ── PEOPLE ───────────────────────────────────────────────────
+function renderPeople() {
+  document.getElementById('pgrid').innerHTML = users.map(u => {
+    const ur=rocks.filter(r=>r.owner_id===u.id);
+    const canEdit = isAdmin() || u.id===currentUser?.id;
+    return`<div class="pcard">
+      <div class="ptop" style="background:${u.color};"></div>
+      <div class="pbd">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;">
+          <div>
+            <div class="pname">${u.name}${u.access_level==='admin'?'<span class="badge-admin">Admin</span>':''}</div>
+            <div class="prole">${u.role}</div>
+            <span class="ploc">${u.location||''}</span>
+          </div>
+          ${canEdit?`<div style="display:flex;gap:4px;"><button class="bs bedit" onclick="editP('${u.id}')">Edit</button>${isAdmin()&&u.id!==currentUser?.id?`<button class="bs bdel" onclick="delItem('person','${u.id}')">X</button>`:''}</div>`:''}
+        </div>
+        <div class="procks">
+          <div class="prt">Rocks (${ur.length})</div>
+          ${ur.length?ur.map(r=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;font-size:11px;"><div class="dot ${dc(r.status)}" style="width:7px;height:7px;"></div>${r.name}</div>`).join(''):'<div style="font-size:11px;color:var(--gray);">No rocks assigned</div>'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function editP(id) {
+  const u=users.find(u=>u.id===id); if(!u) return;
+  mtype='person'; eid=id;
+  document.getElementById('mtitle').textContent='Edit Person';
+  document.getElementById('mbody').innerHTML=pform(u);
+  document.getElementById('mbg').classList.add('open');
+}
+
+// ── AGENDA EDITOR ─────────────────────────────────────────────
+function renderAEdit() {
+  document.getElementById('aedit').innerHTML = agenda.map((item,i)=>`
+    <div class="sr">
+      <div style="flex:1;"><input style="border:1px solid var(--bd);border-radius:4px;padding:5px 8px;font-size:13px;width:65%;" value="${item.name}" onchange="agenda[${i}].name=this.value"/></div>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <input type="number" style="border:1px solid var(--bd);border-radius:4px;padding:5px 8px;font-size:13px;width:55px;" value="${item.mins}" min="1" onchange="agenda[${i}].mins=+this.value"/>
+        <span style="font-size:11px;color:var(--gray);">min</span>
+        <button class="bs" style="background:#f0f0f0;" onclick="mvAg(${i},-1)">↑</button>
+        <button class="bs" style="background:#f0f0f0;" onclick="mvAg(${i},1)">↓</button>
+        <button class="bs bdel" onclick="delItem('agenda','${item.id}')">X</button>
+      </div>
+    </div>`).join('');
+}
+function mvAg(i,d) { const j=i+d; if(j<0||j>=agenda.length)return; [agenda[i],agenda[j]]=[agenda[j],agenda[i]]; renderAEdit(); }
+async function saveAgenda() {
+  for(let i=0;i<agenda.length;i++) {
+    await db('PATCH',`agenda?id=eq.${agenda[i].id}`,{name:agenda[i].name,mins:agenda[i].mins,sort_order:i+1});
+  }
+  applyCfg(); renderL10(); alert('Agenda saved!');
+}
+
+// ── MODAL FORMS ───────────────────────────────────────────────
+function rform(r) {
+  return`<div class="fg"><label class="fl">Rock Name</label><input class="fi" id="mn" value="${r?.name||''}" placeholder="What needs to get done?"/></div>
+  <div class="fg"><label class="fl">Owner</label><select class="fi" id="mo">${uopts(r?.owner_id||currentUser?.id)}</select></div>
+  <div class="fg"><label class="fl">Due Date</label><input class="fi" id="md" value="${r?.due_date||''}" placeholder="e.g. Sep 30"/></div>
+  <div class="fg"><label class="fl">Quarter</label><input class="fi" id="mq" value="${r?.quarter||cfg.quarter||''}" /></div>`;
+}
+function pform(u) {
+  return`<div class="fg"><label class="fl">Name</label><input class="fi" id="mn" value="${u?.name||''}" placeholder="Full name"/></div>
+  <div class="fg"><label class="fl">Role / Title</label><input class="fi" id="mr" value="${u?.role||''}" placeholder="e.g. Operations Manager"/></div>
+  <div class="fg"><label class="fl">Email</label><input class="fi" id="me" value="${u?.email||''}" placeholder="email@milburndemolition.com" type="email"/></div>
+  <div class="fg"><label class="fl">Location</label><input class="fi" id="ml" value="${u?.location||''}" placeholder="e.g. Chicago, Southeast"/></div>
+  <div class="fg"><label class="fl">Color</label><input type="color" class="fi" id="mc" value="${u?.color||'#A6C820'}" style="height:38px;padding:4px;"/></div>
+  ${isAdmin()?`<div class="fg"><label class="fl">Access Level</label><select class="fi" id="mal"><option value="manager"${u?.access_level==='manager'?' selected':''}>Manager</option><option value="admin"${u?.access_level==='admin'?' selected':''}>Admin</option></select></div>`:''}`;
+}
+
+function openM(type) {
+  mtype=type; eid=null;
+  const titles={rock:'Add Rock',metric:'Add Metric',issue:'Add Issue',todo:'Add To-Do',person:'Add Person',agenda:'Add Agenda Item'};
+  document.getElementById('mtitle').textContent=titles[type];
+  const bodies={
+    rock: rform(null),
+    metric:`<div class="fg"><label class="fl">Measurable</label><input class="fi" id="mn" placeholder="e.g. Weekly Revenue, Jobs Bid"/></div>
+      <div class="fg"><label class="fl">Owner</label><select class="fi" id="mo">${uopts(currentUser?.id)}</select></div>
+      <div class="fg"><label class="fl">Goal</label><input class="fi" id="mg" placeholder="e.g. $120K, 5, 0"/></div>
+      <div class="fg"><label class="fl">Direction</label><select class="fi" id="mdr"><option value="up">Higher is better</option><option value="down">Lower is better</option></select></div>`,
+    issue:`<div class="fg"><label class="fl">Issue</label><input class="fi" id="mn" placeholder="Describe the issue..."/></div>
+      <div class="fg"><label class="fl">Owner</label><select class="fi" id="mo">${uopts(currentUser?.id)}</select></div>
+      <div class="fg"><label class="fl">Priority</label><select class="fi" id="mp"><option value="high">High</option><option value="med">Medium</option><option value="low">Low</option></select></div>`,
+    todo:`<div class="fg"><label class="fl">To-Do</label><input class="fi" id="mn" placeholder="What needs to happen?"/></div>
+      <div class="fg"><label class="fl">Owner</label><select class="fi" id="mo">${uopts(currentUser?.id)}</select></div>
+      <div class="fg"><label class="fl">Due</label><input class="fi" id="md" placeholder="This week / Next week / Date"/></div>`,
+    person: pform(null),
+    agenda:`<div class="fg"><label class="fl">Item Name</label><input class="fi" id="mn" placeholder="e.g. Safety Update, Project Review"/></div>
+      <div class="fg"><label class="fl">Minutes</label><input class="fi" type="number" id="mmin" value="10" min="1"/></div>`,
+  };
+  document.getElementById('mbody').innerHTML=bodies[type]||'';
+  document.getElementById('mbg').classList.add('open');
+  setTimeout(()=>document.getElementById('mn')?.focus(),50);
+}
+function closeM() { document.getElementById('mbg').classList.remove('open'); eid=null; }
+
+async function saveM() {
+  const name=document.getElementById('mn')?.value?.trim();
+  const owner=document.getElementById('mo')?.value||currentUser?.id;
+  if(mtype==='rock') {
+    if(!name) return alert('Name required.');
+    const due=document.getElementById('md')?.value||'';
+    const quarter=document.getElementById('mq')?.value||cfg.quarter||'';
+    if(eid) {
+      await db('PATCH',`rocks?id=eq.${eid}`,{name,owner_id:owner,due_date:due,quarter});
+      const r=rocks.find(r=>r.id===eid); if(r){r.name=name;r.owner_id=owner;r.due_date=due;r.quarter=quarter;}
+    } else {
+      const res=await db('POST','rocks',{name,owner_id:owner,status:'ns',pct:0,due_date:due,quarter});
+      if(res&&res[0]) rocks.push(res[0]);
+    }
+    renderRocks(); renderDash(); renderPeople();
+  } else if(mtype==='metric') {
+    if(!name) return alert('Name required.');
+    const res=await db('POST','scorecard',{name,owner_id:owner,goal:document.getElementById('mg')?.value||'',direction:document.getElementById('mdr')?.value||'up',vals:[]});
+    if(res&&res[0]) scorecard.push(res[0]);
+    renderSC();
+  } else if(mtype==='issue') {
+    if(!name) return alert('Required.');
+    const res=await db('POST','issues',{text:name,owner_id:owner,priority:document.getElementById('mp')?.value||'med'});
+    if(res&&res[0]) issues.push(res[0]);
+    renderIssues(); renderDash();
+  } else if(mtype==='todo') {
+    if(!name) return alert('Required.');
+    const res=await db('POST','todos',{text:name,owner_id:owner,due_date:document.getElementById('md')?.value||'',done:false});
+    if(res&&res[0]) todos.push(res[0]);
+    renderTodos(); renderDash();
+  } else if(mtype==='person') {
+    const n=document.getElementById('mn')?.value?.trim()||'';
+    const email=document.getElementById('me')?.value?.trim()||'';
+    if(!n||!email) return alert('Name and email required.');
+    const role=document.getElementById('mr')?.value?.trim()||'';
+    const loc=document.getElementById('ml')?.value?.trim()||'';
+    const color=document.getElementById('mc')?.value||'#A6C820';
+    const access=document.getElementById('mal')?.value||'manager';
+    if(eid) {
+      await db('PATCH',`users?id=eq.${eid}`,{name:n,email,role,location:loc,color,access_level:access});
+      const u=users.find(u=>u.id===eid); if(u){u.name=n;u.email=email;u.role=role;u.location=loc;u.color=color;u.access_level=access;}
+    } else {
+      const res=await db('POST','users',{name:n,email,role,location:loc,color,access_level:access,password_hash:'Milburn2025!'});
+      if(res&&res[0]) users.push(res[0]);
+    }
+    renderPeople();
+  } else if(mtype==='agenda') {
+    if(!name) return alert('Name required.');
+    const res=await db('POST','agenda',{name,mins:+document.getElementById('mmin')?.value||10,sort_order:agenda.length+1});
+    if(res&&res[0]) agenda.push(res[0]);
+    applyCfg(); renderAEdit(); renderL10();
+  }
+  closeM();
+}
 document.getElementById('mbg').addEventListener('click',e=>{if(e.target===document.getElementById('mbg'))closeM();});
-function goPage(id){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.getElementById('page-'+id).classList.add('on');document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('on',n.getAttribute('onclick')===`goPage('${id}')`));}
-init();
+
+function goPage(id) {
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('on',n.getAttribute('onclick')===`goPage('${id}')`));
+}
+
+// ── BOOT ─────────────────────────────────────────────────────
+const saved = sessionStorage.getItem('milburn_user');
+if(saved) {
+  currentUser = JSON.parse(saved);
+  showApp();
+}
 </script>
 </body>
 </html>
